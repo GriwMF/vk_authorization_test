@@ -1,0 +1,7 @@
+%p
+  Use url to obtain token:
+  = link_to 'VK_app', @url, target: '_blank'
+
+= form_tag(token_path) do
+  = text_field_tag :token
+  = submit_tag 'Submit'
