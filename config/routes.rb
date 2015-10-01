@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   root to: 'tokens#index'
   
-  resource :token, only: [:index, :create]
+  resources :tokens, only: [:index, :create]
   resource :bot
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

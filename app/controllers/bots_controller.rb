@@ -1,39 +1,20 @@
-class BotController < ApplicationController
-  def index
+class BotsController < ApplicationController
+  def show
+    bot_id = '6de4ced8-434b-4803-8b46-32a64b92eb8a'
+
     vk = VkontakteApi::Client.new(session[:token])
-    # текущий юзер
-    @user = vk.users.get(uid: session[:vk_id], fields: [:screen_name, :photo]).first
-    # друзья
-    @friends = vk.friends.get(fields: [:screen_name, :sex, :photo, :last_seen])
-    @friends_online = @friends.select { |friend| friend.online == 1 }
-    # группы
-    @groups = vk.groups.get(extended: 1)
-    # первый элемент массива - кол-во групп; его нужно выкинуть
-    @groups.shift
-    # лента новостей
-    raw_feed = vk.newsfeed.get(filters: 'post')
-    @newsfeed = process_feed(raw_feed)
-  end
+    @messages = vk.messages.get_dialogs(unread: 1, v: 5.37).items.map { |item| item.message.slice(:user_id, :body) }
 
-  private
-    def process_feed(raw_feed)
-      users = raw_feed.profiles.inject({}) do |hash, user|
-        hash[user.uid] = user
-        hash
+    @messages.each do |message|
+      if (chat_room = ChatRoom.find_by(id: message.user_id, bot_id: bot_id))
+        bot = IiiApi::Bot.new(chat_room.chat_id)
+      else
+        bot = IiiApi::Bot.new(bot_id, "6de4ced8-private-room-#{message.user_id}")
+        ChatRoom.create(id: message.user_id, bot_id: bot_id, chat_id: bot.chat_id)
       end
 
-      groups = raw_feed.groups.inject({}) do |hash, group|
-        hash[group.gid] = group
-        hash
-      end
-      raw_feed.items.map do |item|
-        if item.source_id > 0
-          item.source = users[item.source_id]
-        else
-          item.source = groups[-item.source_id]
-        end
-        item
-      end
+      message.answer = ActionView::Base.full_sanitizer.sanitize(bot.ask(message.body))
+      message.response = vk.messages.send(user_id: message.user_id, message: message.answer, v: 5.37)
     end
   end
 end

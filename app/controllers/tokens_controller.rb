@@ -9,6 +9,6 @@ class TokensController < ApplicationController
 
   def create
     session[:token] = params[:token]
-    redirect_to bots_path
+    redirect_to bot_path
   end
 end
