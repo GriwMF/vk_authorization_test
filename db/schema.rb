@@ -19,10 +19,11 @@ ActiveRecord::Schema.define(version: 20151001160624) do
   create_table "chat_rooms", force: :cascade do |t|
     t.string   "chat_id"
     t.string   "bot_id"
+    t.string   "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
-  add_index "chat_rooms", ["bot_id"], name: "index_chat_rooms_on_bot_id", using: :btree
+  add_index "chat_rooms", ["user_id", "bot_id"], name: "index_chat_rooms_on_user_id_and_bot_id", using: :btree
 
 end
